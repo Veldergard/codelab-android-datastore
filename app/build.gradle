@@ -17,6 +17,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.protobuf)
 }
 
 android {
@@ -65,8 +66,32 @@ dependencies {
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.lifecycle.livedata.ktx
 
+    // datastore
+    implementation libs.androidx.datastore
+    implementation libs.google.protobuf.lite
+
     // testing
     testImplementation libs.junit
     androidTestImplementation libs.androidx.runner
     androidTestImplementation libs.androidx.espresso.core
+}
+
+protobuf {
+    protoc {
+        artifact = libs.google.protobuf.protoc.get()
+    }
+
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+                create("kotlin")
+            }
+        }
+    }
 }

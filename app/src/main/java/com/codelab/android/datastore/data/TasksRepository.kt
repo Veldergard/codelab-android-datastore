@@ -41,11 +41,13 @@ object TasksRepository {
                 completed = true
             ),
             Task(
-                name = "Check out the code", deadline = simpleDateFormat.parse("2020-05-03")!!,
+                name = "Check out the code",
+                deadline = simpleDateFormat.parse("2020-05-03")!!,
                 priority = TaskPriority.LOW
             ),
             Task(
-                name = "Read about DataStore", deadline = simpleDateFormat.parse("2020-06-03")!!,
+                name = "Read about DataStore",
+                deadline = simpleDateFormat.parse("2020-06-03")!!,
                 priority = TaskPriority.HIGH
             ),
             Task(

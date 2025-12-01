@@ -29,12 +29,12 @@ import kotlinx.coroutines.flow.combine
 data class TasksUiModel(
     val tasks: List<Task>,
     val showCompleted: Boolean,
-    val sortOrder: SortOrder
+    val sortOrder: SortOrder,
 )
 
 class TasksViewModel(
     repository: TasksRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 
     // Keep the show completed filter as a stream of changes
@@ -61,7 +61,7 @@ class TasksViewModel(
     private fun filterSortTasks(
         tasks: List<Task>,
         showCompleted: Boolean,
-        sortOrder: SortOrder
+        sortOrder: SortOrder,
     ): List<Task> {
         // filter the tasks
         val filteredTasks = if (showCompleted) {
@@ -95,7 +95,7 @@ class TasksViewModel(
 
 class TasksViewModelFactory(
     private val repository: TasksRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

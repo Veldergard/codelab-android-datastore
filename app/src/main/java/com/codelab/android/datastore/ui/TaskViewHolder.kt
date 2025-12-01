@@ -31,7 +31,7 @@ import java.util.Locale
  * Holder for a task item in the tasks list
  */
 class TaskViewHolder(
-    private val binding: TaskViewItemBinding
+    private val binding: TaskViewItemBinding,
 ) : RecyclerView.ViewHolder(binding.root) {
 
     // Format date as: Apr 6, 2020

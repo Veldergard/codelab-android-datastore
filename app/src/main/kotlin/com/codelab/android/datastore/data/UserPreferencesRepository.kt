@@ -25,6 +25,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private const val SORT_ORDER_KEY = "sort_order"
@@ -62,17 +63,7 @@ class UserPreferencesRepository(
                 throw exception
             }
         }.map { preferences ->
-            // Get the sort order from preferences and convert it to a [SortOrder] object
-            val sortOrder = SortOrder.valueOf(
-                preferences[PreferenceKeys.SORT_ORDER] ?: SortOrder.NONE.name
-            )
-
-            // Get our show completed value, defaulting to false if not set:
-            val showCompleted = preferences[PreferenceKeys.SHOW_COMPLETED] ?: false
-            UserPreferences(
-                showCompleted,
-                sortOrder
-            )
+            mapUserPreferences(preferences)
         }
 
     suspend fun updateShowCompleted(showCompleted: Boolean) {
@@ -89,16 +80,24 @@ class UserPreferencesRepository(
 
             val newSortOrder =
                 if (enable) {
-                    if (currentOrder == SortOrder.BY_PRIORITY) {
-                        SortOrder.BY_DEADLINE_AND_PRIORITY
-                    } else {
-                        SortOrder.BY_DEADLINE
+                    when (currentOrder) {
+                        SortOrder.BY_PRIORITY, SortOrder.BY_DEADLINE_AND_PRIORITY -> {
+                            SortOrder.BY_DEADLINE_AND_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.BY_DEADLINE
+                        }
                     }
                 } else {
-                    if (currentOrder == SortOrder.BY_DEADLINE_AND_PRIORITY) {
-                        SortOrder.BY_PRIORITY
-                    } else {
-                        SortOrder.NONE
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE_AND_PRIORITY, SortOrder.BY_PRIORITY -> {
+                            SortOrder.BY_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.NONE
+                        }
                     }
                 }
 
@@ -114,20 +113,45 @@ class UserPreferencesRepository(
 
             val newSortOrder =
                 if (enable) {
-                    if (currentOrder == SortOrder.BY_DEADLINE) {
-                        SortOrder.BY_DEADLINE_AND_PRIORITY
-                    } else {
-                        SortOrder.BY_PRIORITY
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE, SortOrder.BY_DEADLINE_AND_PRIORITY -> {
+                            SortOrder.BY_DEADLINE_AND_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.BY_PRIORITY
+                        }
                     }
                 } else {
-                    if (currentOrder == SortOrder.BY_DEADLINE_AND_PRIORITY) {
-                        SortOrder.BY_DEADLINE
-                    } else {
-                        SortOrder.NONE
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE_AND_PRIORITY, SortOrder.BY_DEADLINE -> {
+                            SortOrder.BY_DEADLINE
+                        }
+
+                        else -> {
+                            SortOrder.NONE
+                        }
                     }
                 }
 
             preferences[PreferenceKeys.SORT_ORDER] = newSortOrder.name
         }
+    }
+
+    suspend fun fetchInitialPreferences() =
+        mapUserPreferences(dataStore.data.first().toPreferences())
+
+    private fun mapUserPreferences(preferences: Preferences): UserPreferences {
+        // Get the sort order from preferences and convert it to a [SortOrder] object
+        val sortOrder = SortOrder.valueOf(
+            preferences[PreferenceKeys.SORT_ORDER] ?: SortOrder.NONE.name
+        )
+
+        // Get our show completed value, defaulting to false if not set:
+        val showCompleted = preferences[PreferenceKeys.SHOW_COMPLETED] ?: false
+        return UserPreferences(
+            showCompleted,
+            sortOrder
+        )
     }
 }

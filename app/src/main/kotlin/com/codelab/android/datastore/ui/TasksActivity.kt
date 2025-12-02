@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.codelab.android.datastore.data.SortOrder
 import com.codelab.android.datastore.data.TasksRepository
+import com.codelab.android.datastore.data.UserPreferences
 import com.codelab.android.datastore.data.UserPreferencesRepository
 import com.codelab.android.datastore.databinding.ActivityTasksBinding
 
@@ -63,19 +64,45 @@ class TasksActivity : AppCompatActivity() {
         )[TasksViewModel::class.java]
 
         setupRecyclerView()
-        setupFilterListeners(viewModel)
-        setupSort()
 
-        viewModel.tasksUiModel.observe(this) { tasksUiModel ->
-            adapter.submitList(tasksUiModel.tasks)
-            updateSort(tasksUiModel.sortOrder)
-            binding.showCompletedSwitch.isChecked = tasksUiModel.showCompleted
+        viewModel.initialSetupEvent.observe(this) { initialSetupEvent ->
+            setupUi(initialSetupEvent)
         }
     }
 
-    private fun setupFilterListeners(viewModel: TasksViewModel) {
+    private fun setupUi(initialPreferences: UserPreferences) {
+        updateTaskFilters(initialPreferences.sortOrder, initialPreferences.showCompleted)
+        setupFilterListeners()
+        observerPreferenceChanges()
+    }
+
+    private fun updateTaskFilters(sortOrder: SortOrder, showCompleted: Boolean) {
+        println(sortOrder.name)
+        with(binding) {
+            showCompletedSwitch.isChecked = showCompleted
+            sortDeadline.isChecked =
+                sortOrder == SortOrder.BY_DEADLINE || sortOrder == SortOrder.BY_DEADLINE_AND_PRIORITY
+            sortPriority.isChecked =
+                sortOrder == SortOrder.BY_PRIORITY || sortOrder == SortOrder.BY_DEADLINE_AND_PRIORITY
+        }
+    }
+
+    private fun observerPreferenceChanges() {
+        viewModel.tasksUiModel.observe(this) { tasksUiModel ->
+            adapter.submitList(tasksUiModel.tasks)
+            updateTaskFilters(tasksUiModel.sortOrder, tasksUiModel.showCompleted)
+        }
+    }
+
+    private fun setupFilterListeners() {
         binding.showCompletedSwitch.setOnCheckedChangeListener { _, checked ->
             viewModel.showCompletedTasks(checked)
+        }
+        binding.sortDeadline.setOnCheckedChangeListener { _, checked ->
+            viewModel.enableSortByDeadline(checked)
+        }
+        binding.sortPriority.setOnCheckedChangeListener { _, checked ->
+            viewModel.enableSortByPriority(checked)
         }
     }
 
@@ -85,21 +112,5 @@ class TasksActivity : AppCompatActivity() {
         binding.list.addItemDecoration(decoration)
 
         binding.list.adapter = adapter
-    }
-
-    private fun setupSort() {
-        binding.sortDeadline.setOnCheckedChangeListener { _, checked ->
-            viewModel.enableSortByDeadline(checked)
-        }
-        binding.sortPriority.setOnCheckedChangeListener { _, checked ->
-            viewModel.enableSortByPriority(checked)
-        }
-    }
-
-    private fun updateSort(sortOrder: SortOrder) {
-        binding.sortDeadline.isChecked =
-            sortOrder == SortOrder.BY_DEADLINE || sortOrder == SortOrder.BY_DEADLINE_AND_PRIORITY
-        binding.sortPriority.isChecked =
-            sortOrder == SortOrder.BY_PRIORITY || sortOrder == SortOrder.BY_DEADLINE_AND_PRIORITY
     }
 }

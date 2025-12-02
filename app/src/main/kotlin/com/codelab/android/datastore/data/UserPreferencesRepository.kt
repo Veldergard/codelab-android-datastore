@@ -23,6 +23,7 @@ import com.codelab.android.datastore.UserPreferences
 import com.codelab.android.datastore.UserPreferences.SortOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 
 /**
  * Class that handles saving and retrieving user preferences
@@ -56,16 +57,24 @@ class UserPreferencesRepository(
             val currentOrder = preferences.sortOrder
             val newSortOrder =
                 if (enable) {
-                    if (currentOrder == SortOrder.BY_PRIORITY) {
-                        SortOrder.BY_DEADLINE_AND_PRIORITY
-                    } else {
-                        SortOrder.BY_DEADLINE
+                    when (currentOrder) {
+                        SortOrder.BY_PRIORITY, SortOrder.BY_DEADLINE_AND_PRIORITY -> {
+                            SortOrder.BY_DEADLINE_AND_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.BY_DEADLINE
+                        }
                     }
                 } else {
-                    if (currentOrder == SortOrder.BY_DEADLINE_AND_PRIORITY) {
-                        SortOrder.BY_PRIORITY
-                    } else {
-                        SortOrder.NONE
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE_AND_PRIORITY, SortOrder.BY_PRIORITY -> {
+                            SortOrder.BY_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.NONE
+                        }
                     }
                 }
             preferences.toBuilder().setSortOrder(newSortOrder).build()
@@ -77,20 +86,29 @@ class UserPreferencesRepository(
             val currentOrder = preferences.sortOrder
             val newSortOrder =
                 if (enable) {
-                    if (currentOrder == SortOrder.BY_DEADLINE) {
-                        SortOrder.BY_DEADLINE_AND_PRIORITY
-                    } else {
-                        SortOrder.BY_PRIORITY
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE, SortOrder.BY_DEADLINE_AND_PRIORITY -> {
+                            SortOrder.BY_DEADLINE_AND_PRIORITY
+                        }
+
+                        else -> {
+                            SortOrder.BY_PRIORITY
+                        }
                     }
                 } else {
-                    if (currentOrder == SortOrder.BY_DEADLINE_AND_PRIORITY) {
-                        SortOrder.BY_DEADLINE
-                    } else {
-                        SortOrder.NONE
+                    when (currentOrder) {
+                        SortOrder.BY_DEADLINE_AND_PRIORITY, SortOrder.BY_DEADLINE -> {
+                            SortOrder.BY_DEADLINE
+                        }
+
+                        else -> {
+                            SortOrder.NONE
+                        }
                     }
                 }
             preferences.toBuilder().setSortOrder(newSortOrder).build()
         }
     }
 
+    suspend fun fetchInitialPreferences() = userPreferencesStore.data.first()
 }
